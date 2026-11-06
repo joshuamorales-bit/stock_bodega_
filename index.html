@@ -3,38 +3,56 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#f5f7f4">
-  <title>Inventario de bodega</title>
+  <meta name="theme-color" content="#0b0d17">
+  <title>Inventario de Bodega | Grupo ITD</title>
+
+  <!-- Google Fonts para estilo tecnológico -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
 
   <!-- SDK de Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Librería para procesar Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
     :root {
-      color-scheme: light;
-      font-family: "Segoe UI", Arial, sans-serif;
-      color: #1d2b24;
-      background: #f5f7f4;
+      color-scheme: dark;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      color: #f1f5f9;
+      background: #0b0d17;
       font-synthesis: none;
       text-rendering: optimizeLegibility;
-      --green: #23734d;
-      --green-dark: #19583a;
-      --muted: #6b776f;
-      --border: #e4e9e4;
-      --surface: #fff;
+      
+      /* PALETA DE COLORES GRUPO ITD */
+      --bg-dark: #0b0d17;
+      --surface: #121629;
+      --surface-border: #1e243d;
+      --orange: #ff6b2b;
+      --orange-hover: #e05519;
+      --orange-glow: rgba(255, 107, 43, 0.25);
+      --text-muted: #8e9bb0;
+      --text-light: #ffffff;
+      --danger: #ef4444;
+      --success: #10b981;
+      --font-tech: 'Orbitron', sans-serif;
     }
 
     * { box-sizing: border-box; }
-    body { margin: 0; min-width: 320px; }
-    button, input, textarea { font: inherit; }
-    button { cursor: pointer; }
-
-    /* FORZAR QUE LOS ELEMENTOS CON 'hidden' NUNCA SE MUESTREN */
-    [hidden] {
-      display: none !important;
+    body { 
+      margin: 0; 
+      min-width: 320px; 
+      background: var(--bg-dark); 
+      background-image: radial-gradient(circle at 50% 0%, #1a1f38 0%, #0b0d17 75%);
+      min-height: 100vh; 
     }
+    button, input, textarea { font: inherit; }
+    button { cursor: pointer; transition: all 0.2s ease; }
 
-    /* ESTILOS DE LOGIN Y REGISTRO */
+    [hidden] { display: none !important; }
+
+    /* LOGIN */
     .login-container {
       display: flex;
       min-height: 100vh;
@@ -44,171 +62,289 @@
     }
     .login-card {
       width: 100%;
-      max-width: 380px;
-      padding: 30px;
+      max-width: 400px;
+      padding: 36px 32px;
       background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      border: 1px solid var(--surface-border);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 20px var(--orange-glow);
     }
-    .login-header {
-      text-align: center;
-      margin-bottom: 24px;
+    .login-header { text-align: center; margin-bottom: 28px; }
+    .brand-logo-img {
+      max-width: 140px;
+      height: auto;
+      margin-bottom: 12px;
+      filter: drop-shadow(0 0 10px rgba(255, 107, 43, 0.3));
     }
-    .login-header .brand-icon {
-      margin: 0 auto 12px;
-    }
-    .auth-toggle {
-      margin-top: 15px;
-      text-align: center;
-      font-size: 13px;
-      color: var(--muted);
-    }
-    .auth-toggle a {
-      color: var(--green);
-      font-weight: 600;
-      text-decoration: none;
-      cursor: pointer;
-    }
-    .auth-toggle a:hover {
-      text-decoration: underline;
-    }
+    .auth-toggle { margin-top: 20px; text-align: center; font-size: 13px; color: var(--text-muted); }
+    .auth-toggle a { color: var(--orange); font-weight: 600; text-decoration: none; cursor: pointer; }
+    .auth-toggle a:hover { text-decoration: underline; }
 
-    /* ESTILOS PRINCIPALES */
+    /* VISTA PRINCIPAL */
     .page { 
-      width: min(1120px, calc(100% - 40px)); 
+      width: min(1160px, calc(100% - 40px)); 
       margin: 0 auto; 
-      padding: 38px 0 56px; 
+      padding: 32px 0 60px; 
     }
-    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 34px; }
-    .brand { display: flex; align-items: center; gap: 13px; }
-    .brand-icon {
-      display: grid;
-      width: 46px;
-      height: 46px;
-      place-items: center;
-      border-radius: 14px;
-      color: #fff;
-      background: var(--green);
-      font-size: 23px;
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 28px; }
+    .brand { display: flex; align-items: center; gap: 16px; }
+    .brand-logo-topbar {
+      height: 48px;
+      width: auto;
+      object-fit: contain;
     }
-    .brand-name { margin: 0; font-size: 18px; font-weight: 700; }
-    .brand-caption { margin: 3px 0 0; color: var(--muted); font-size: 13px; }
+    .brand-name { 
+      margin: 0; 
+      font-family: var(--font-tech); 
+      font-size: 20px; 
+      font-weight: 800; 
+      letter-spacing: 0.05em; 
+      color: var(--text-light);
+    }
+    .brand-caption { margin: 2px 0 0; color: var(--text-muted); font-size: 13px; }
     .topbar-actions { display: flex; align-items: center; gap: 12px; }
     .logout-button {
-      border: 1px solid var(--border);
-      background: #fff;
-      padding: 8px 14px;
-      border-radius: 8px;
-      color: #7a857e;
-      font-size: 12px;
+      border: 1px solid var(--surface-border);
+      background: var(--surface);
+      padding: 9px 16px;
+      border-radius: 10px;
+      color: var(--text-muted);
+      font-size: 13px;
       font-weight: 600;
     }
-    .logout-button:hover { background: #f0f4f1; color: #1d2b24; }
-    .local-badge { color: #466653; background: #e8f2eb; border-radius: 999px; padding: 9px 13px; font-size: 12px; font-weight: 600; }
-    .intro { margin-bottom: 27px; }
-    .eyebrow { margin: 0 0 8px; color: var(--green); font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
-    h1 { margin: 0; font-size: clamp(29px, 4vw, 39px); letter-spacing: -.04em; }
-    .intro-copy { margin: 9px 0 0; color: var(--muted); font-size: 15px; }
-    .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; margin-bottom: 22px; }
-    .stat-card, .panel { border: 1px solid var(--border); border-radius: 15px; background: var(--surface); box-shadow: 0 3px 12px rgb(22 46 32 / 3%); }
-    .stat-card { display: flex; align-items: center; gap: 14px; padding: 19px 21px; }
-    .stat-icon { display: grid; width: 42px; height: 42px; flex: 0 0 auto; place-items: center; border-radius: 12px; background: #eef5ef; font-size: 20px; }
-    .stat-label { margin: 0 0 3px; color: var(--muted); font-size: 12px; }
-    .stat-value { margin: 0; font-size: 22px; font-weight: 700; }
-    .workspace { display: grid; grid-template-columns: minmax(280px, .9fr) minmax(0, 1.5fr); align-items: start; gap: 20px; }
-    .panel { padding: 22px; }
-    .panel-heading { margin: 0; font-size: 17px; }
-    .panel-description { margin: 6px 0 20px; color: var(--muted); font-size: 13px; line-height: 1.5; }
-    .field { margin-bottom: 15px; }
-    .field label { display: block; margin-bottom: 7px; font-size: 13px; font-weight: 600; }
+    .logout-button:hover { background: #1e243d; color: var(--text-light); }
+    .local-badge { 
+      color: var(--orange); 
+      background: rgba(255, 107, 43, 0.12); 
+      border: 1px solid rgba(255, 107, 43, 0.3);
+      border-radius: 999px; 
+      padding: 7px 14px; 
+      font-size: 12px; 
+      font-weight: 600; 
+    }
+
+    /* PESTAÑAS NAVEGACION */
+    .nav-tabs {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--surface-border);
+      padding-bottom: 12px;
+    }
+    .tab-button {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .tab-button:hover {
+      color: var(--text-light);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .tab-button.active {
+      background: var(--surface);
+      color: var(--orange);
+      border-color: var(--surface-border);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .intro { margin-bottom: 24px; }
+    .eyebrow { 
+      margin: 0 0 6px; 
+      color: var(--orange); 
+      font-family: var(--font-tech); 
+      font-size: 12px; 
+      font-weight: 700; 
+      letter-spacing: .12em; 
+      text-transform: uppercase; 
+    }
+    h1 { margin: 0; font-size: clamp(28px, 4vw, 36px); letter-spacing: -.02em; color: var(--text-light); }
+    .intro-copy { margin: 8px 0 0; color: var(--text-muted); font-size: 15px; }
+    
+    .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card, .panel { 
+      border: 1px solid var(--surface-border); 
+      border-radius: 16px; 
+      background: var(--surface); 
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); 
+    }
+    .stat-card { display: flex; align-items: center; gap: 16px; padding: 20px 22px; }
+    .stat-icon { 
+      display: grid; 
+      width: 44px; 
+      height: 44px; 
+      flex: 0 0 auto; 
+      place-items: center; 
+      border-radius: 12px; 
+      background: rgba(255, 107, 43, 0.15); 
+      color: var(--orange);
+      font-size: 20px; 
+    }
+    .stat-label { margin: 0 0 2px; color: var(--text-muted); font-size: 13px; font-weight: 500; }
+    .stat-value { margin: 0; font-size: 24px; font-weight: 700; color: var(--text-light); font-family: var(--font-tech); }
+    
+    .workspace { display: grid; grid-template-columns: minmax(300px, 1fr) minmax(0, 1.4fr); align-items: start; gap: 24px; }
+    .panel { padding: 24px; }
+    .panel-heading { margin: 0; font-size: 18px; font-weight: 700; color: var(--text-light); }
+    .panel-description { margin: 6px 0 20px; color: var(--text-muted); font-size: 13px; line-height: 1.5; }
+    
+    .field { margin-bottom: 16px; }
+    .field label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: #cbd5e1; }
     .field input, .search-input, .textarea-input {
       width: 100%;
-      min-height: 43px;
-      border: 1px solid #dce3dd;
-      border-radius: 9px;
+      min-height: 44px;
+      border: 1px solid var(--surface-border);
+      border-radius: 10px;
       outline: none;
-      padding: 10px 12px;
-      color: #1d2b24;
-      background: #fff;
+      padding: 10px 14px;
+      color: var(--text-light);
+      background: #090b14;
+      transition: all 0.2s ease;
     }
+    .field input[type="file"] { padding: 8px 12px; background: #090b14; color: var(--text-muted); }
     .textarea-input { min-height: 100px; resize: vertical; }
-    input:focus, textarea:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgb(35 115 77 / 12%); }
-    .primary-button { width: 100%; min-height: 44px; border: 0; border-radius: 9px; color: #fff; background: var(--green); font-weight: 650; }
-    .primary-button:hover { background: var(--green-dark); }
-    .confirm-button { width: 100%; min-height: 40px; border: 0; border-radius: 9px; color: #fff; background: #2b6cb0; font-weight: 650; margin-top: 10px; }
-    .confirm-button:hover { background: #1a4971; }
-    .confirm-button:disabled { background: #cbd5e0; cursor: not-allowed; }
-    .form-message { min-height: 19px; margin: 11px 0 0; color: var(--green-dark); font-size: 12px; line-height: 1.5; }
-    .form-message.error { color: #a42a2a; }
-    .query-box { margin-top: 20px; padding-top: 19px; border-top: 1px solid var(--border); }
-    .query-box .panel-description { margin-bottom: 13px; }
-    .query-form { display: flex; gap: 8px; }
+    input:focus, textarea:focus { 
+      border-color: var(--orange); 
+      box-shadow: 0 0 0 3px var(--orange-glow); 
+    }
+    
+    .primary-button { 
+      width: 100%; 
+      min-height: 44px; 
+      border: 0; 
+      border-radius: 10px; 
+      color: #fff; 
+      background: var(--orange); 
+      font-weight: 700; 
+      font-size: 14px; 
+      box-shadow: 0 4px 14px var(--orange-glow); 
+    }
+    .primary-button:hover { background: var(--orange-hover); transform: translateY(-1px); }
+    
+    .confirm-button { 
+      width: 100%; 
+      min-height: 42px; 
+      border: 0; 
+      border-radius: 10px; 
+      color: #fff; 
+      background: #0284c7; 
+      font-weight: 600; 
+      font-size: 14px; 
+      margin-top: 12px; 
+    }
+    .confirm-button:hover { background: #0369a1; }
+    .confirm-button:disabled { background: #334155; cursor: not-allowed; }
+    
+    .form-message { min-height: 19px; margin: 12px 0 0; color: var(--orange); font-size: 13px; line-height: 1.5; font-weight: 500; }
+    .form-message.error { color: var(--danger); }
+    
+    .query-box { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--surface-border); }
+    .query-box .panel-description { margin-bottom: 14px; }
+    .query-form { display: flex; gap: 10px; }
     .query-form .search-input { min-width: 0; }
-    .query-button { flex: 0 0 auto; border: 0; border-radius: 9px; padding: 0 15px; color: #fff; background: #293a30; font-weight: 600; }
-    .query-button:hover { background: #17241b; }
-    .answer { display: none; margin-top: 12px; border-radius: 9px; padding: 12px 13px; background: #eaf4ec; color: #205a38; font-size: 13px; line-height: 1.5; }
+    .query-button { 
+      flex: 0 0 auto; 
+      border: 1px solid var(--surface-border); 
+      border-radius: 10px; 
+      padding: 0 18px; 
+      color: #fff; 
+      background: #1e243d; 
+      font-weight: 600; 
+      font-size: 13px; 
+    }
+    .query-button:hover { background: #2a3254; }
+    
+    .answer { 
+      display: none; 
+      margin-top: 14px; 
+      border-radius: 10px; 
+      padding: 14px 16px; 
+      background: rgba(16, 185, 129, 0.1); 
+      color: #34d399; 
+      font-size: 14px; 
+      font-weight: 500; 
+      line-height: 1.5; 
+      border: 1px solid rgba(16, 185, 129, 0.2); 
+    }
     .answer.visible { display: block; }
-    .answer.not-found { color: #803f16; background: #fff3e5; }
+    .answer.not-found { color: #f97316; background: rgba(249, 115, 22, 0.1); border-color: rgba(249, 115, 22, 0.2); }
 
     .batch-results {
       max-height: 280px;
       overflow-y: auto;
-      margin-top: 12px;
-      border-radius: 9px;
-      border: 1px solid var(--border);
-      background: #fafcfb;
+      margin-top: 14px;
+      border-radius: 10px;
+      border: 1px solid var(--surface-border);
+      background: #090b14;
     }
-    .batch-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid #edf0ed; font-size: 13px; }
+    .batch-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--surface-border); font-size: 13px; }
     .batch-item:last-child { border-bottom: 0; }
     .batch-info { display: flex; flex-direction: column; gap: 2px; }
-    .batch-title { font-weight: 650; color: #1d2b24; }
-    .batch-sub { font-size: 11px; color: var(--muted); }
-    .batch-status { font-weight: 600; padding: 4px 9px; border-radius: 999px; font-size: 11px; white-space: nowrap; }
-    .batch-status.ok { background: #eaf4ec; color: #23734d; }
-    .batch-status.partial { background: #fff2df; color: #9c5b16; }
-    .batch-status.missing { background: #fde8e8; color: #a42a2a; }
+    .batch-title { font-weight: 600; color: var(--text-light); }
+    .batch-sub { font-size: 12px; color: var(--text-muted); }
+    .batch-status { font-weight: 600; padding: 4px 10px; border-radius: 999px; font-size: 11px; white-space: nowrap; }
+    .batch-status.ok { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .batch-status.partial { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+    .batch-status.missing { background: rgba(239, 68, 68, 0.15); color: #f87171; }
 
     .inventory-panel { min-width: 0; }
-    .inventory-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 17px; }
-    .inventory-header .panel-description { margin: 5px 0 0; }
-    .search-wrap { width: min(230px, 45%); }
-    .search-input::placeholder, .field input::placeholder, .textarea-input::placeholder { color: #98a29b; }
-    .table-wrap { overflow-x: auto; }
+    .inventory-header { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 20px; }
+    .inventory-header .panel-description { margin: 4px 0 0; }
+    .search-wrap { width: min(240px, 45%); }
+    .search-input::placeholder, .field input::placeholder, .textarea-input::placeholder { color: #64748b; }
+    
+    .table-wrap { overflow-x: auto; border: 1px solid var(--surface-border); border-radius: 12px; }
     table { width: 100%; border-collapse: collapse; text-align: left; }
-    th { padding: 11px 10px; border-bottom: 1px solid var(--border); color: #7a857e; font-size: 11px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; }
-    td { padding: 14px 10px; border-bottom: 1px solid #edf0ed; font-size: 13px; }
+    th { 
+      padding: 14px 16px; 
+      border-bottom: 1px solid var(--surface-border); 
+      color: var(--text-muted); 
+      font-size: 11px; 
+      font-weight: 700; 
+      letter-spacing: .08em; 
+      text-transform: uppercase; 
+      background: #0d101d; 
+    }
+    td { padding: 16px; border-bottom: 1px solid var(--surface-border); font-size: 14px; vertical-align: middle; background: var(--surface); color: var(--text-light); }
     tbody tr:last-child td { border-bottom: 0; }
-    .product-name { font-weight: 650; }
-    .quantity-pill { display: inline-block; border-radius: 999px; padding: 5px 9px; color: #276343; background: #eaf4ec; font-size: 12px; font-weight: 650; white-space: nowrap; }
-    .quantity-pill.low { color: #9c5b16; background: #fff2df; }
-    .remove-button { border: 0; border-radius: 7px; padding: 7px 9px; color: #885050; background: transparent; font-size: 12px; }
-    .remove-button:hover { background: #fff0ef; }
-    .empty-state { padding: 35px 12px; color: var(--muted); text-align: center; font-size: 13px; line-height: 1.6; }
-    .empty-state strong { display: block; margin-bottom: 5px; color: #35443a; font-size: 14px; }
+    tbody tr:hover td { background: #181d33; }
+    .product-name { font-weight: 600; color: var(--text-light); }
+    
+    .quantity-pill { display: inline-block; border-radius: 999px; padding: 4px 12px; color: #34d399; background: rgba(16, 185, 129, 0.15); font-size: 12px; font-weight: 600; white-space: nowrap; }
+    .quantity-pill.low { color: #fbbf24; background: rgba(245, 158, 11, 0.15); }
+    .remove-button { border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 6px 12px; color: #f87171; background: rgba(239, 68, 68, 0.1); font-size: 12px; font-weight: 600; }
+    .remove-button:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+    .empty-state { padding: 40px 16px; color: var(--text-muted); text-align: center; font-size: 14px; line-height: 1.6; background: var(--surface); }
+    .empty-state strong { display: block; margin-bottom: 4px; color: var(--text-light); font-size: 15px; }
     .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-    .footer-note { margin: 19px 0 0; color: var(--muted); font-size: 12px; text-align: center; }
+    .footer-note { margin: 24px 0 0; color: var(--text-muted); font-size: 13px; text-align: center; }
+
+    .user-badge { color: var(--orange); font-weight: 600; }
+    .time-badge { font-size: 12px; color: var(--text-muted); }
 
     @media (max-width: 760px) {
-      .page { width: min(100% - 28px, 560px); padding-top: 24px; }
+      .page { width: min(100% - 24px, 560px); padding-top: 24px; }
       .workspace { grid-template-columns: 1fr; }
-      .stats { gap: 9px; }
-      .stat-card { gap: 9px; padding: 14px 11px; }
-      .stat-icon { width: 34px; height: 34px; font-size: 17px; }
-      .stat-value { font-size: 18px; }
+      .stats { gap: 10px; }
+      .stat-card { gap: 10px; padding: 14px 12px; }
+      .stat-icon { width: 36px; height: 36px; font-size: 18px; }
+      .stat-value { font-size: 20px; }
       .stat-label { font-size: 11px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- PRIMERA PÁGINA: VISTA DE LOGIN Y REGISTRO -->
+  <!-- LOGIN -->
   <div class="login-container" id="login-view">
     <div class="login-card">
       <div class="login-header">
-        <div class="brand-icon" aria-hidden="true">▤</div>
-        <h2 class="brand-name" id="auth-title">Bodega</h2>
-        <p class="brand-caption" id="auth-subtitle">Iniciar sesión para acceder</p>
+        <img class="brand-logo-img" src="grupoItd_logo.jpg" alt="Grupo ITD Logo">
+        <h2 class="brand-name" id="auth-title">GRUPO ITD</h2>
+        <p class="brand-caption" id="auth-subtitle">A SAFER WORLD FOR ALL</p>
       </div>
       <form id="login-form">
         <div class="field" id="name-field" hidden>
@@ -217,7 +353,7 @@
         </div>
         <div class="field">
           <label for="login-email">Correo electrónico</label>
-          <input id="login-email" type="email" placeholder="usuario@bodega.com" required>
+          <input id="login-email" type="email" placeholder="usuario@grupoitd.com" required>
         </div>
         <div class="field">
           <label for="login-password">Contraseña</label>
@@ -233,13 +369,13 @@
     </div>
   </div>
 
-  <!-- SEGUNDA PÁGINA: VISTA PRINCIPAL DEL INVENTARIO -->
+  <!-- VISTA PRINCIPAL -->
   <main class="page" id="app-view" hidden>
     <header class="topbar">
       <div class="brand">
-        <div class="brand-icon" aria-hidden="true">▤</div>
+        <img class="brand-logo-topbar" src="grupoItd_logo.jpg" alt="Grupo ITD Logo">
         <div>
-          <p class="brand-name">Bodega</p>
+          <p class="brand-name">GRUPO ITD</p>
           <p class="brand-caption" id="user-display">Cargando usuario...</p>
         </div>
       </div>
@@ -249,94 +385,160 @@
       </div>
     </header>
 
-    <section class="intro" aria-labelledby="page-title">
-      <p class="eyebrow">Inventario</p>
-      <h1 id="page-title">Tu bodega, bajo control.</h1>
-      <p class="intro-copy">Registra tus productos y consulta cuántas unidades tienes disponibles en tiempo real.</p>
-    </section>
+    <div class="nav-tabs">
+      <button class="tab-button active" id="tab-inventory-btn" type="button">📦 Inventario Activo</button>
+      <button class="tab-button" id="tab-history-btn" type="button">📋 Historial de Salidas</button>
+    </div>
 
-    <section class="stats" aria-label="Resumen del inventario">
-      <article class="stat-card">
-        <span class="stat-icon" aria-hidden="true">📦</span>
-        <div><p class="stat-label">Productos registrados</p><p class="stat-value" id="product-count">0</p></div>
-      </article>
-      <article class="stat-card">
-        <span class="stat-icon" aria-hidden="true">🔢</span>
-        <div><p class="stat-label">Unidades en bodega</p><p class="stat-value" id="unit-count">0</p></div>
-      </article>
-      <article class="stat-card">
-        <span class="stat-icon" aria-hidden="true">⚠️</span>
-        <div><p class="stat-label">Productos por agotarse</p><p class="stat-value" id="low-count">0</p></div>
-      </article>
-    </section>
-
-    <div class="workspace">
-      <section class="panel" aria-labelledby="add-heading">
-        <h2 class="panel-heading" id="add-heading">Agregar al inventario</h2>
-        <p class="panel-description">Escribe el nombre del material y la cantidad de unidades que tienes.</p>
-        <form id="product-form">
-          <div class="field">
-            <label for="product-name-input">Nombre del producto</label>
-            <input id="product-name-input" name="product" type="text" maxlength="80" placeholder="Ej. Tornillos" required>
-          </div>
-          <div class="field">
-            <label for="product-quantity">Cantidad de unidades</label>
-            <input id="product-quantity" name="quantity" type="number" min="1" step="1" placeholder="Ej. 25" required>
-          </div>
-          <button class="primary-button" type="submit">＋ &nbsp;Agregar producto</button>
-          <p class="form-message" id="form-message" role="status" aria-live="polite"></p>
-        </form>
-
-        <section class="query-box" aria-labelledby="query-heading">
-          <h2 class="panel-heading" id="query-heading">Consultar un material</h2>
-          <p class="panel-description">Pregunta por un producto para saber si hay y cuántas unidades quedan.</p>
-          <form class="query-form" id="query-form">
-            <input class="search-input" id="query-input" type="text" maxlength="100" placeholder="Ej. ¿Hay tornillos?" aria-label="Pregunta por un material" required>
-            <button class="query-button" type="submit">Consultar</button>
-          </form>
-          <div class="answer" id="answer" role="status" aria-live="polite"></div>
-        </section>
-
-        <section class="query-box" aria-labelledby="batch-heading">
-          <h2 class="panel-heading" id="batch-heading">Verificar y despachar pedido</h2>
-          <p class="panel-description">Pega la lista indicando cantidad requerida y producto (ej: 10 tornillos, 5 CABLE HDMI).</p>
-          <form id="batch-form">
-            <div class="field">
-              <textarea class="textarea-input" id="batch-input" placeholder="Ej.&#10;10 Tornillos&#10;5 CABLE HDMI&#10;MONITOR x2" required></textarea>
-            </div>
-            <button class="primary-button" type="submit">Verificar disponibilidad</button>
-          </form>
-          <div class="batch-results" id="batch-results" hidden></div>
-          <button class="confirm-button" id="confirm-order-btn" type="button" hidden>📦 Confirmar y Descontar de Bodega</button>
-          <p class="form-message" id="batch-message" role="status" aria-live="polite"></p>
-        </section>
+    <!-- SECCIÓN DE INVENTARIO -->
+    <div id="view-inventory">
+      <section class="intro" aria-labelledby="page-title">
+        <p class="eyebrow">Control de Inventario</p>
+        <h1 id="page-title">Bodega Central</h1>
+        <p class="intro-copy">A safer world for all. Gestiona existencias y despachos en tiempo real.</p>
       </section>
 
-      <section class="panel inventory-panel" aria-labelledby="inventory-heading">
+      <section class="stats" aria-label="Resumen del inventario">
+        <article class="stat-card">
+          <span class="stat-icon" aria-hidden="true">📦</span>
+          <div><p class="stat-label">Productos registrados</p><p class="stat-value" id="product-count">0</p></div>
+        </article>
+        <article class="stat-card">
+          <span class="stat-icon" aria-hidden="true">🔢</span>
+          <div><p class="stat-label">Unidades en bodega</p><p class="stat-value" id="unit-count">0</p></div>
+        </article>
+        <article class="stat-card">
+          <span class="stat-icon" aria-hidden="true">⚠️</span>
+          <div><p class="stat-label">Productos por agotarse</p><p class="stat-value" id="low-count">0</p></div>
+        </article>
+      </section>
+
+      <div class="workspace">
+        <section class="panel" aria-labelledby="add-heading">
+          <h2 class="panel-heading" id="add-heading">Agregar al inventario</h2>
+          <p class="panel-description">Escribe el nombre del material y la cantidad a registrar.</p>
+          <form id="product-form">
+            <div class="field">
+              <label for="product-name-input">Nombre del producto</label>
+              <input id="product-name-input" name="product" type="text" maxlength="80" placeholder="Ej. Tornillos" required>
+            </div>
+            <div class="field">
+              <label for="product-quantity">Cantidad de unidades</label>
+              <input id="product-quantity" name="quantity" type="number" min="1" step="1" placeholder="Ej. 25" required>
+            </div>
+            <button class="primary-button" type="submit">＋ &nbsp;Agregar producto</button>
+            <p class="form-message" id="form-message" role="status" aria-live="polite"></p>
+          </form>
+
+          <!-- CARGAR O VERIFICAR DESDE EXCEL -->
+          <section class="query-box" aria-labelledby="excel-heading">
+            <h2 class="panel-heading" id="excel-heading">Cargar o Verificar desde Excel</h2>
+            <p class="panel-description">Sube un archivo (.xlsx o .xls) con columnas de producto y cantidad.</p>
+            <form id="excel-form">
+              <div class="field">
+                <input type="file" id="excel-input" accept=".xlsx, .xls" required>
+              </div>
+              <div style="display:flex; gap:10px;">
+                <button class="query-button" style="flex:1; min-height:42px;" type="submit" id="btn-excel-add">📊 Cargar al Inventario</button>
+                <button class="query-button" style="flex:1; min-height:42px; border-color:var(--orange); color:var(--orange);" type="button" id="btn-excel-check">🔍 Verificar Disponibilidad</button>
+              </div>
+            </form>
+            <p class="form-message" id="excel-message" role="status" aria-live="polite"></p>
+          </section>
+
+          <section class="query-box" aria-labelledby="query-heading">
+            <h2 class="panel-heading" id="query-heading">Consultar un material</h2>
+            <p class="panel-description">Pregunta por un producto para saber si hay y cuántas unidades quedan.</p>
+            <form class="query-form" id="query-form">
+              <input class="search-input" id="query-input" type="text" maxlength="100" placeholder="Ej. ¿Hay tornillos?" aria-label="Pregunta por un material" required>
+              <button class="query-button" type="submit">Consultar</button>
+            </form>
+            <div class="answer" id="answer" role="status" aria-live="polite"></div>
+          </section>
+
+          <!-- VERIFICAR Y DESPACHAR PEDIDO -->
+          <section class="query-box" aria-labelledby="batch-heading">
+            <h2 class="panel-heading" id="batch-heading">Verificar y despachar pedido</h2>
+            <p class="panel-description">Escribe o pega la lista de materiales a despachar abajo.</p>
+            <form id="batch-form">
+              <div class="field">
+                <label for="batch-input">Lista de productos solicitados:</label>
+                <textarea class="textarea-input" id="batch-input" placeholder="Ej.&#10;10 Tornillos&#10;5 CABLE HDMI&#10;MONITOR x2" required></textarea>
+              </div>
+              <button class="primary-button" type="submit">Verificar disponibilidad</button>
+            </form>
+            <div class="batch-results" id="batch-results" hidden></div>
+            <button class="confirm-button" id="confirm-order-btn" type="button" hidden>📦 Confirmar y Descontar de Bodega</button>
+            <p class="form-message" id="batch-message" role="status" aria-live="polite"></p>
+          </section>
+        </section>
+
+        <section class="panel inventory-panel" aria-labelledby="inventory-heading">
+          <div class="inventory-header">
+            <div>
+              <h2 class="panel-heading" id="inventory-heading">Productos</h2>
+              <p class="panel-description">Consulta y administra tus existencias.</p>
+            </div>
+            <div class="search-wrap">
+              <input class="search-input" id="filter-input" type="search" placeholder="Buscar producto..." aria-label="Filtrar productos">
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Producto</th>
+                  <th scope="col">Existencias</th>
+                  <th scope="col"><span class="visually-hidden">Acciones</span></th>
+                </tr>
+              </thead>
+              <tbody id="inventory-body"></tbody>
+            </table>
+            <div class="empty-state" id="empty-state">
+              <strong>Tu inventario está vacío</strong>
+              Agrega un producto o importa un Excel para comenzar.
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- SECCIÓN DE HISTORIAL DE SALIDAS -->
+    <div id="view-history" hidden>
+      <section class="intro">
+        <p class="eyebrow">Registro de Movimientos</p>
+        <h1>Historial de Material Sacado</h1>
+        <p class="intro-copy">Consulta quién y cuándo se realizaron los despachos de bodega.</p>
+      </section>
+
+      <section class="panel">
         <div class="inventory-header">
           <div>
-            <h2 class="panel-heading" id="inventory-heading">Productos</h2>
-            <p class="panel-description">Consulta y administra tus existencias.</p>
-          </div>
-          <div class="search-wrap">
-            <input class="search-input" id="filter-input" type="search" placeholder="Buscar producto..." aria-label="Filtrar productos">
+            <h2 class="panel-heading">Salidas Confirmadas</h2>
+            <p class="panel-description">Detalle de material entregado y responsable.</p>
           </div>
         </div>
         <div class="table-wrap">
           <table>
             <thead>
-              <tr><th scope="col">Producto</th><th scope="col">Existencias</th><th scope="col"><span class="visually-hidden">Acciones</span></th></tr>
+              <tr>
+                <th scope="col">Fecha / Hora</th>
+                <th scope="col">Producto Sacado</th>
+                <th scope="col">Cantidad</th>
+                <th scope="col">Entregado / Sacado por</th>
+              </tr>
             </thead>
-            <tbody id="inventory-body"></tbody>
+            <tbody id="history-body"></tbody>
           </table>
-          <div class="empty-state" id="empty-state">
-            <strong>Tu inventario está vacío</strong>
-            Agrega un producto desde Supabase o desde el formulario para comenzar.
+          <div class="empty-state" id="history-empty-state">
+            <strong>No hay salidas registradas aún</strong>
+            Los pedidos despachados aparecerán aquí automáticamente.
           </div>
         </div>
       </section>
     </div>
-    <p class="footer-note">Sincronizado directamente con Supabase.</p>
+
+    <p class="footer-note">Grupo ITD &copy; Sistema de Inventario Central</p>
   </main>
 
   <script>
@@ -345,7 +547,7 @@
 
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Elementos DOM
+    // DOM Elements
     const loginView = document.querySelector("#login-view");
     const appView = document.querySelector("#app-view");
     const loginForm = document.querySelector("#login-form");
@@ -361,6 +563,15 @@
     const toggleAuthBtn = document.querySelector("#toggle-auth-btn");
     const toggleText = document.querySelector("#toggle-text");
 
+    // Tabs
+    const tabInventoryBtn = document.querySelector("#tab-inventory-btn");
+    const tabHistoryBtn = document.querySelector("#tab-history-btn");
+    const viewInventory = document.querySelector("#view-inventory");
+    const viewHistory = document.querySelector("#view-history");
+    const historyBody = document.querySelector("#history-body");
+    const historyEmptyState = document.querySelector("#history-empty-state");
+
+    let currentUser = null;
     let isSignUpMode = false;
     let realtimeChannel = null;
 
@@ -368,6 +579,12 @@
     const productNameInput = document.querySelector("#product-name-input");
     const quantityInput = document.querySelector("#product-quantity");
     const formMessage = document.querySelector("#form-message");
+    
+    const excelForm = document.querySelector("#excel-form");
+    const excelInput = document.querySelector("#excel-input");
+    const excelMessage = document.querySelector("#excel-message");
+    const btnExcelCheck = document.querySelector("#btn-excel-check");
+
     const queryForm = document.querySelector("#query-form");
     const queryInput = document.querySelector("#query-input");
     const answer = document.querySelector("#answer");
@@ -382,6 +599,22 @@
 
     let products = [];
     let currentParsedOrder = [];
+
+    // CAMBIO DE PESTAÑAS
+    tabInventoryBtn.addEventListener("click", () => {
+      tabInventoryBtn.classList.add("active");
+      tabHistoryBtn.classList.remove("active");
+      viewInventory.hidden = false;
+      viewHistory.hidden = true;
+    });
+
+    tabHistoryBtn.addEventListener("click", () => {
+      tabHistoryBtn.classList.add("active");
+      tabInventoryBtn.classList.remove("active");
+      viewInventory.hidden = true;
+      viewHistory.hidden = false;
+      fetchHistory();
+    });
 
     toggleAuthBtn.addEventListener("click", () => {
       isSignUpMode = !isSignUpMode;
@@ -398,7 +631,7 @@
       } else {
         nameField.hidden = true;
         loginName.required = false;
-        authSubtitle.textContent = "Iniciar sesión para acceder";
+        authSubtitle.textContent = "A SAFER WORLD FOR ALL";
         authSubmitBtn.textContent = "Ingresar";
         toggleText.textContent = "¿No tienes cuenta?";
         toggleAuthBtn.textContent = "Registrarse";
@@ -409,13 +642,13 @@
       supabaseClient.auth.onAuthStateChange((event, session) => {
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           if (session) {
+            currentUser = session.user;
             showApp(session.user);
           }
         } else if (event === 'SIGNED_OUT') {
           showLogin();
         }
       });
-
       checkSession();
     }
 
@@ -424,24 +657,24 @@
       if (error || !session) {
         showLogin();
       } else {
+        currentUser = session.user;
         showApp(session.user);
       }
     }
 
-    // CAMBIO DE PÁGINA (DE LOGIN A PANEL PRINCIPAL)
     function showApp(user) {
-      loginView.hidden = true;  // Oculta la página de Login
-      appView.hidden = false;  // Muestra la página de Inventario
+      loginView.hidden = true;
+      appView.hidden = false;
       const displayName = user.user_metadata?.nombre || user.email;
       userDisplay.textContent = displayName;
       fetchProducts();
+      fetchHistory();
       subscribeToRealtime();
     }
 
-    // CAMBIO DE PÁGINA (DE PANEL PRINCIPAL A LOGIN)
     function showLogin() {
-      loginView.hidden = false; // Muestra la página de Login
-      appView.hidden = true;   // Oculta la página de Inventario
+      loginView.hidden = false;
+      appView.hidden = true;
     }
 
     loginForm.addEventListener("submit", async (e) => {
@@ -457,20 +690,15 @@
         const { data, error } = await supabaseClient.auth.signUp({
           email,
           password,
-          options: {
-            data: { nombre: nombre }
-          }
+          options: { data: { nombre: nombre } }
         });
 
         if (error) {
           loginError.textContent = "Error al registrarse: " + error.message;
           loginError.classList.add("error");
         } else {
-          if (data.session) {
-            showApp(data.user);
-          } else {
-            loginError.textContent = "¡Cuenta registrada! Revisa tu correo para confirmar.";
-          }
+          if (data.session) showApp(data.user);
+          else loginError.textContent = "¡Cuenta registrada! Revisa tu correo para confirmar.";
         }
       } else {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
@@ -496,7 +724,7 @@
       const { data, error } = await supabaseClient.from('inventory').select('*');
 
       if (error) {
-        console.error("Error al obtener datos:", error);
+        console.error("Error al obtener inventario:", error);
         formMessage.textContent = "Error de conexión con Supabase: " + error.message;
         formMessage.classList.add("error");
         return;
@@ -504,29 +732,69 @@
 
       formMessage.textContent = "";
       formMessage.classList.remove("error");
-      products = (data || []).map(item => ({ id: item.id, name: item.name, quantity: item.quantity }));
+      products = (data || []).map(item => ({ 
+        id: item.id, 
+        name: item.name, 
+        quantity: item.quantity
+      }));
       render();
     }
 
-    function subscribeToRealtime() {
-      if (realtimeChannel) {
-        supabaseClient.removeChannel(realtimeChannel);
+    /* OBTENER Y RENDERIZAR HISTORIAL */
+    async function fetchHistory() {
+      const { data, error } = await supabaseClient.from('history').select('*').order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Error cargando historial:", error);
+        return;
       }
+
+      historyBody.replaceChildren();
+      historyEmptyState.hidden = data && data.length > 0;
+
+      (data || []).forEach(item => {
+        const row = document.createElement("tr");
+
+        const dateCell = document.createElement("td");
+        dateCell.className = "time-badge";
+        const dateObj = new Date(item.created_at);
+        dateCell.textContent = dateObj.toLocaleString("es-ES", { dateStyle: 'short', timeStyle: 'short' });
+
+        const productCell = document.createElement("td");
+        productCell.className = "product-name";
+        productCell.textContent = item.product_name;
+
+        const qtyCell = document.createElement("td");
+        qtyCell.textContent = `- ${item.quantity_removed} un.`;
+        qtyCell.style.color = "#f87171";
+        qtyCell.style.fontWeight = "600";
+
+        const userCell = document.createElement("td");
+        userCell.className = "user-badge";
+        userCell.textContent = item.user_email;
+
+        row.append(dateCell, productCell, qtyCell, userCell);
+        historyBody.append(row);
+      });
+    }
+
+    function subscribeToRealtime() {
+      if (realtimeChannel) supabaseClient.removeChannel(realtimeChannel);
 
       realtimeChannel = supabaseClient
         .channel('inventory-changes')
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'inventory' },
-          () => {
-            fetchProducts();
-          }
-        )
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, () => {
+          fetchProducts();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'history' }, () => {
+          fetchHistory();
+        })
         .subscribe();
     }
 
     function normalize(value) {
-      return value
+      return (value || "")
+        .toString()
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
         .toLocaleLowerCase("es")
@@ -582,6 +850,7 @@
 
       visibleProducts.forEach((product) => {
         const row = document.createElement("tr");
+
         const nameCell = document.createElement("td");
         nameCell.className = "product-name";
         nameCell.textContent = product.name;
@@ -629,6 +898,117 @@
       }
 
       form.reset();
+    });
+
+    /* LECTOR DE EXCEL DETECTA CUALQUIER COLUMNA */
+    function readExcelRows(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(worksheet);
+            
+            const resultList = [];
+            for (const row of json) {
+              let name = null;
+              let qty = 0;
+
+              for (const key of Object.keys(row)) {
+                const normKey = normalize(key);
+                if (["producto", "nombre", "material", "descripcion", "item", "articulos"].some(k => normKey.includes(k))) {
+                  name = row[key];
+                }
+                if (["cantidad", "cant", "unidades", "stock", "qty"].some(k => normKey.includes(k))) {
+                  qty = Number(row[key]);
+                }
+              }
+
+              if (!name || !qty) {
+                const values = Object.values(row);
+                name = name || values.find(v => typeof v === 'string');
+                qty = qty || Number(values.find(v => typeof v === 'number' || !isNaN(v))) || 1;
+              }
+
+              if (name && !isNaN(qty) && qty > 0) {
+                resultList.push({ name: String(name).trim(), quantity: qty });
+              }
+            }
+            resolve(resultList);
+          } catch (err) {
+            reject(err);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    excelForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const file = excelInput.files[0];
+      if (!file) return;
+
+      excelMessage.textContent = "Procesando archivo Excel...";
+      excelMessage.classList.remove("error");
+
+      try {
+        const items = await readExcelRows(file);
+        if (items.length === 0) {
+          excelMessage.textContent = "No se encontraron filas válidas en el Excel.";
+          excelMessage.classList.add("error");
+          return;
+        }
+
+        let itemsProcessed = 0;
+        for (const item of items) {
+          const existing = products.find((p) => normalize(p.name) === normalize(item.name));
+          if (existing) {
+            await supabaseClient.from('inventory').update({ quantity: existing.quantity + item.quantity }).eq('id', existing.id);
+          } else {
+            await supabaseClient.from('inventory').insert([{ name: item.name, quantity: item.quantity }]);
+          }
+          itemsProcessed++;
+        }
+
+        excelMessage.textContent = `¡Éxito! Se guardaron ${itemsProcessed} productos del Excel.`;
+        excelForm.reset();
+        fetchProducts();
+      } catch (err) {
+        console.error(err);
+        excelMessage.textContent = "Error al procesar el Excel.";
+        excelMessage.classList.add("error");
+      }
+    });
+
+    btnExcelCheck.addEventListener("click", async () => {
+      const file = excelInput.files[0];
+      if (!file) {
+        excelMessage.textContent = "Selecciona un archivo Excel primero.";
+        excelMessage.classList.add("error");
+        return;
+      }
+
+      excelMessage.textContent = "Verificando disponibilidad...";
+      excelMessage.classList.remove("error");
+
+      try {
+        const items = await readExcelRows(file);
+        if (items.length === 0) {
+          excelMessage.textContent = "No se detectó contenido válido.";
+          excelMessage.classList.add("error");
+          return;
+        }
+
+        batchInput.value = items.map(i => `${i.quantity} ${i.name}`).join("\n");
+        excelMessage.textContent = "✅ Lista pasada a verificación abajo.";
+        batchForm.dispatchEvent(new Event("submit"));
+      } catch (err) {
+        console.error(err);
+        excelMessage.textContent = "Error al verificar el Excel.";
+        excelMessage.classList.add("error");
+      }
     });
 
     queryForm.addEventListener("submit", (event) => {
@@ -720,33 +1100,52 @@
       confirmOrderBtn.hidden = currentParsedOrder.length === 0;
     });
 
+    /* CONFIRMAR DESPACHO Y REGISTRAR EN HISTORIAL CON USUARIO */
     confirmOrderBtn.addEventListener("click", async () => {
       if (currentParsedOrder.length === 0) return;
 
       confirmOrderBtn.disabled = true;
-      batchMessage.textContent = "Procesando pedido y descontando stock...";
+      batchMessage.textContent = "Procesando pedido, registrando en historial y descontando stock...";
       batchMessage.classList.remove("error");
+
+      const userEmail = currentUser?.user_metadata?.nombre || currentUser?.email || "Usuario Desconocido";
 
       try {
         for (const item of currentParsedOrder) {
+          const qtyToRemove = Math.min(item.inStock, item.needed);
           const newQty = Math.max(0, item.inStock - item.needed);
-          const { error } = await supabaseClient
+
+          // 1. Actualizar Inventario
+          const { error: updateErr } = await supabaseClient
             .from('inventory')
             .update({ quantity: newQty })
             .eq('id', item.id);
 
-          if (error) throw error;
+          if (updateErr) throw updateErr;
+
+          // 2. Insertar en tabla History
+          if (qtyToRemove > 0) {
+            await supabaseClient
+              .from('history')
+              .insert([{
+                product_name: item.name,
+                quantity_removed: qtyToRemove,
+                user_email: userEmail
+              }]);
+          }
         }
 
-        batchMessage.textContent = "¡Pedido confirmado y existencias actualizadas en bodega!";
+        batchMessage.textContent = "¡Pedido confirmado, movimiento registrado en el historial y existencias actualizadas!";
         batchInput.value = "";
         confirmOrderBtn.hidden = true;
         batchResults.hidden = true;
         currentParsedOrder = [];
+
         await fetchProducts();
+        await fetchHistory();
       } catch (err) {
-        console.error("Error actualizando inventario:", err);
-        batchMessage.textContent = "Error al actualizar el inventario: " + err.message;
+        console.error("Error actualizando inventario/historial:", err);
+        batchMessage.textContent = "Error al procesar: " + err.message;
         batchMessage.classList.add("error");
       } finally {
         confirmOrderBtn.disabled = false;
